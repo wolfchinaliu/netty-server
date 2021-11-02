@@ -3,6 +3,7 @@ package day3;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInitializer;
+import io.netty.channel.ChannelOption;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
@@ -25,6 +26,7 @@ public class TestHttp {
         //1: 启动器
         new ServerBootstrap()
                 .group(boss, workers)//Group组
+                .option(ChannelOption.SO_BACKLOG, 2)
                 .channel(NioServerSocketChannel.class)//选择Selector
                 //boss 负责处理连接
                 .childHandler(new ChannelInitializer<NioSocketChannel>() {
