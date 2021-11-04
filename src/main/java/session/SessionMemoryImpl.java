@@ -1,6 +1,7 @@
 package session;
 
-import java.nio.channels.Channel;
+import io.netty.channel.Channel;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;

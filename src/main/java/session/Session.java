@@ -1,6 +1,7 @@
 package session;
 
-import java.nio.channels.Channel;
+
+import io.netty.channel.Channel;
 
 public interface Session {
 

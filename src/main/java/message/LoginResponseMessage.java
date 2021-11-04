@@ -1,7 +1,9 @@
 package message;
 
 import lombok.Data;
+import lombok.ToString;
 
+@ToString(callSuper = true)
 @Data
 public class LoginResponseMessage extends AbstractResponseMessage {
 

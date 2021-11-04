@@ -39,7 +39,7 @@ public interface GroupSession {
     Group removeGroup(String name);
 
     /**
-     * 获取群组人员
+     * 获取群组人员 如果组不存在返回Null
      * @param name 组名
      * @return 群组名称集合
      */

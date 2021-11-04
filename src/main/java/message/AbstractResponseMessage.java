@@ -15,4 +15,12 @@ public abstract class AbstractResponseMessage extends Message {
         this.success = success;
         this.reason = reason;
     }
+
+    @Override
+    public String toString() {
+        return "AbstractResponseMessage{" +
+                "success=" + success +
+                ", reason='" + reason + '\'' +
+                '}';
+    }
 }
