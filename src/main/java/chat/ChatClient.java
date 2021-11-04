@@ -1,16 +1,16 @@
 package chat;
 
 import io.netty.bootstrap.Bootstrap;
-import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelInboundHandlerAdapter;
-import io.netty.channel.ChannelInitializer;
+import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
 import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
+import io.netty.handler.timeout.IdleState;
+import io.netty.handler.timeout.IdleStateEvent;
+import io.netty.handler.timeout.IdleStateHandler;
 import lombok.extern.slf4j.Slf4j;
 import message.*;
 import protocol.MessageCodecSharable;
@@ -34,6 +34,7 @@ public class ChatClient {
         try {
             Bootstrap bootstrap = new Bootstrap();
             bootstrap.channel(NioSocketChannel.class);
+            bootstrap.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 3000);
             bootstrap.group(nioEventLoopGroup);
             ChannelFuture channelFuture = bootstrap.handler(new ChannelInitializer<SocketChannel>() {
 
@@ -43,7 +44,31 @@ public class ChatClient {
                     ch.pipeline().addLast(new LengthFieldBasedFrameDecoder(1024, 12, 4, 0, 0));
 //                    ch.pipeline().addLast(loggingHandler);
                     ch.pipeline().addLast(messageCodec);
+                    ch.pipeline().addLast(new IdleStateHandler(0, 3, 0));
+                    ch.pipeline().addLast(new ChannelDuplexHandler(){
+                        @Override
+                        public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
+                            IdleStateEvent idleStateEvent = (IdleStateEvent) evt;
+                            if (idleStateEvent.state() == IdleState.WRITER_IDLE) {
+                                ctx.writeAndFlush(new PingMessage());
+                            }
+
+                        }
+                    });
                     ch.pipeline().addLast("client handle", new ChannelInboundHandlerAdapter(){
+
+                        @Override
+                        public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+                            log.info("客户端退出...");
+                            ctx.channel().close();
+                        }
+
+                        @Override
+                        public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+                            log.info("客户端异常退出...");
+                            ctx.channel().close();
+                        }
+
                         //连接建立以后的active事件
                         @Override
                         public void channelActive(ChannelHandlerContext ctx) {
@@ -95,7 +120,7 @@ public class ChatClient {
                                             ctx.writeAndFlush(new GroupCreateRequestMessage(split[1], members));
                                             break;
                                         case "gmembers":
-                                            ctx.writeAndFlush(new GroupMemberRequestMessage(split[1]));
+                                            ctx.writeAndFlush(new GroupMembersRequestMessage(split[1]));
                                             break;
                                         case "gjoin":
                                             ctx.writeAndFlush(new GroupJoinRequestMessage(userName, split[1]));

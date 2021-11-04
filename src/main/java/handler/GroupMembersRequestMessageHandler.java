@@ -3,7 +3,7 @@ package handler;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
-import message.GroupMemberRequestMessage;
+import message.GroupMembersRequestMessage;
 import message.GroupMembersResponseMessage;
 import session.GroupSession;
 import session.GroupSessionFactory;
@@ -11,9 +11,9 @@ import session.GroupSessionFactory;
 import java.util.Set;
 
 @ChannelHandler.Sharable
-public class GroupMembersRequestMessageHandler extends SimpleChannelInboundHandler<GroupMemberRequestMessage> {
+public class GroupMembersRequestMessageHandler extends SimpleChannelInboundHandler<GroupMembersRequestMessage> {
     @Override
-    protected void channelRead0(ChannelHandlerContext ctx, GroupMemberRequestMessage msg) throws Exception {
+    protected void channelRead0(ChannelHandlerContext ctx, GroupMembersRequestMessage msg) throws Exception {
         String groupName = msg.getGroupName();
         GroupSession groupSession = GroupSessionFactory.getSession();
         Set<String> members = groupSession.getMembers(groupName);

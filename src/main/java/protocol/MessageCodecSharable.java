@@ -8,10 +8,6 @@ import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import message.Message;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.util.List;
 
 @ChannelHandler.Sharable
@@ -34,10 +30,7 @@ public class MessageCodecSharable extends MessageToMessageCodec<ByteBuf, Message
         //对齐填充 一个字节
         out.writeByte(0xff);
         //获取内容的字节数组
-        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-        ObjectOutputStream objectOutputStream = new ObjectOutputStream(byteArrayOutputStream);
-        objectOutputStream.writeObject(msg);
-        byte[] bytes = byteArrayOutputStream.toByteArray();
+        byte[] bytes = Serializer.Algorithm.Json.serialize(msg);
         //写入长度 一个字节
         out.writeInt(bytes.length);
         //写入内容
@@ -67,17 +60,15 @@ public class MessageCodecSharable extends MessageToMessageCodec<ByteBuf, Message
         //读取内容
         in.readBytes(bytes, 0, length);
         //判断序列化类型
-        if (serializerType == 0) {
-            //JDK序列化
-            log.info("{},{},{},{},{},{}", magicNum, version, serializerType, messageType, sequenceId, length);
-            ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(bytes);
-            ObjectInputStream objectInputStream = new ObjectInputStream(byteArrayInputStream);
-            Message message = (Message) objectInputStream.readObject();
-            log.info("{}", message);
-            //传递到下一个handler
-            outList.add(message);
-        }else{
-            log.info("没有对应的序列化格式!");
+        Class<?> messageClass = Message.getMessageClass(messageType);
+        Object result;
+        switch (serializerType) {
+            case 0:
+                result = Serializer.Algorithm.Json.deserialize(messageClass, bytes);
+                break;
+            default:
+                throw new IllegalStateException("Unexpected value: " + serializerType);
         }
+        outList.add(result);
     }
 }
